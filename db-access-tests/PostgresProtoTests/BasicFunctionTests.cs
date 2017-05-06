@@ -16,32 +16,39 @@ namespace PostgresProtoTests
     public class BasicFunctionTests
     {
         [Fact]
-        public void CanAddToATable()
+        public void Can_Insert_And_Retrieve_Row_From_Person_Table()
         {
             string connectionString = "Host=localhost;Username=postgres;Password=mypassword;Database=mydb";
+
+            int result;
+            string firstName = "fn";
+            string lastName = "ln";
 
             using (var dbConnection = new NpgsqlConnection(connectionString))
             {
                 dbConnection.Open();
 
-                string sql = string.Format("insert into person (firstname, lastname) values ('fn', 'ln')");
-                int result = dbConnection.Execute(sql);
+                var sql = string.Format(
+                    $"insert into person (firstname, lastname) values ('{firstName}', '{lastName}')");
+                result = dbConnection.Execute(sql);
                 result.Should().BeGreaterThan(0);
 
                 dbConnection.Close();
             }
-        }
-        
-        [Fact]
-        public void CanRetrieveFromATable()
-        {
-            string connectionString = "Host=localhost;Username=postgres;Password=mypassword;Database=mydb";
+
+            var personJustAdded = new Person()
+            {
+                Id = result,
+                FirstName = firstName,
+                LastName = lastName
+            };
+
             using (var dbConnection = new NpgsqlConnection(connectionString))
             {
                 dbConnection.Open();
 
                 Person person = dbConnection.Query<Person>("select * from person").FirstOrDefault();
-                person.ShouldBeEquivalentTo(new Person() {Id = 1, FirstName = "fn", LastName = "ln"});
+                person.ShouldBeEquivalentTo(personJustAdded);
 
                 dbConnection.Close();
             }
